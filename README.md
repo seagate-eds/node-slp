@@ -1,0 +1,1 @@
+# OpenSLP bindings for nodejs
