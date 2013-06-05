@@ -1,7 +1,6 @@
-var events = require('events');
-var util = require('util');
+var nodeSLP = require('./build/Release/slp');
+// var events = require('events');
+// var util = require('util');
+// util.inherits(nodeSLP.OpenSLP, events.EventEmitter);
 
-var OpenSLP = require('./build/Release/slp').OpenSLP;
-util.inherits(OpenSLP, events.EventEmitter);
-
-module.exports = OpenSLP;
+module.exports = nodeSLP;
