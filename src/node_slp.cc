@@ -1,11 +1,9 @@
-// goo.gl/VOnhG
 #include "node_slp.h"
 
 /*
-  If an slp function returns SLP_HANDLE_IN_USE we must enqueue this request for later use.
-  Actually, all slp requests requiring a handle must be enqueued.
-
-  Yes, this module ignores SLP_NOT_IMPLEMENTED.
+  2013-06-04
+  OpenSLP 1.2.1 on Linux doesn't seem to support Async mode (SLPOpen returns SLP_NOT_IMPLEMENTED).
+  This module uses libuv to queue certain operations.
 */
 
 using namespace v8;
@@ -45,7 +43,8 @@ Handle<Value> Escape(const Arguments& args) {
   HandleScope scope;
   String::AsciiValue inbuf(args[0]);
   char* outBuf;
-  SLPError ret = SLPEscape(*inbuf, &outBuf, args[1]->BooleanValue() ? SLP_TRUE : SLP_FALSE);
+  SLPBoolean isTag = (args.Length() > 1 && args[1]->BooleanValue()) ? SLP_TRUE : SLP_FALSE;
+  SLPError ret = SLPEscape(*inbuf, &outBuf, isTag);
   Local<String> result = String::New(outBuf);
   SLPFree(outBuf);
   switch (ret) {
@@ -75,19 +74,17 @@ Handle<Value> Unescape(const Arguments& args) {
   }
 }
 
-Handle<Value> GetProperty(const Arguments& args) {
+Handle<Value> GetSetProperty(const Arguments& args) {
   HandleScope scope;
   String::AsciiValue name(args[0]);
-  const char* ret = SLPGetProperty(*name);
-  return scope.Close(String::New(ret));
-}
-
-Handle<Value> SetProperty(const Arguments& args) {
-  HandleScope scope;
-  String::AsciiValue name(args[0]);
-  String::Utf8Value value(args[1]);
-  SLPSetProperty(*name, *value);
-  return scope.Close(Undefined());
+  if (args.Length() > 1) {
+    String::Utf8Value value(args[1]);
+    SLPSetProperty(*name, *value);
+    return Undefined();
+  } else {
+    const char* result = SLPGetProperty(*name);
+    return (result == NULL) ? Null() : scope.Close(String::New(result));
+  }
 }
 
 Handle<Value> GetRefreshInterval(Local<String> property, const AccessorInfo& info) {
@@ -97,13 +94,12 @@ Handle<Value> GetRefreshInterval(Local<String> property, const AccessorInfo& inf
 
 extern "C" void init(Handle<Object> target) {
   target->SetAccessor(String::NewSymbol("version"), Version);
-  target->SetAccessor(String::NewSymbol("refresh_interval"), GetRefreshInterval);
+  target->SetAccessor(String::NewSymbol("refreshInterval"), GetRefreshInterval);
   // set addon methods
-  NODE_SET_METHOD(target, "parse_srv_url", ParseSrvURL);
+  NODE_SET_METHOD(target, "parseSrvUrl", ParseSrvURL);
   NODE_SET_METHOD(target, "escape", Escape);
   NODE_SET_METHOD(target, "unescape", Unescape);
-  NODE_SET_METHOD(target, "get_property", GetProperty);
-  NODE_SET_METHOD(target, "set_property", SetProperty);
+  NODE_SET_METHOD(target, "property", GetSetProperty);
   // set NodeOpenSLP class
   NodeOpenSLP::Init(target);
 }
@@ -118,11 +114,12 @@ void NodeOpenSLP::Init(Handle<Object> target) {
   tpl->InstanceTemplate()->SetInternalFieldCount(1);
   NODE_SET_PROTOTYPE_METHOD(tpl, "reg", Reg);
   NODE_SET_PROTOTYPE_METHOD(tpl, "dereg", Dereg);
-  NODE_SET_PROTOTYPE_METHOD(tpl, "del_attrs", DelAttrs);
-  NODE_SET_PROTOTYPE_METHOD(tpl, "find_scopes", FindScopes);
-  NODE_SET_PROTOTYPE_METHOD(tpl, "find_srvs", FindSrvs);
-  NODE_SET_PROTOTYPE_METHOD(tpl, "find_srv_types", FindSrvTypes);
-  NODE_SET_PROTOTYPE_METHOD(tpl, "find_attrs", FindAttrs);
+  NODE_SET_PROTOTYPE_METHOD(tpl, "delAttrs", DelAttrs);
+  NODE_SET_PROTOTYPE_METHOD(tpl, "findScopes", FindScopes);
+  NODE_SET_PROTOTYPE_METHOD(tpl, "findSrvs", FindSrvs);
+  NODE_SET_PROTOTYPE_METHOD(tpl, "findSrvTypes", FindSrvTypes);
+  NODE_SET_PROTOTYPE_METHOD(tpl, "findAttrs", FindAttrs);
+  tpl->InstanceTemplate()->SetAccessor(String::NewSymbol("lastError"), GetLastError);
   Persistent<Function> constructor = Persistent<Function>::New(tpl->GetFunction());
   target->Set(String::NewSymbol("OpenSLP"), constructor);
 }
@@ -130,12 +127,13 @@ void NodeOpenSLP::Init(Handle<Object> target) {
 Handle<Value> NodeOpenSLP::NewInstance(const Arguments& args) {
   HandleScope scope;
   SLPHandle handle;
-  SLPError err = SLPOpen(args[0]->IsUndefined() ? NULL : *String::AsciiValue(args[0]), SLP_TRUE, &handle);
+  SLPError err = SLPOpen(args[0]->IsUndefined() ? NULL : *String::AsciiValue(args[0]), SLP_FALSE, &handle);
   if (err != SLP_OK) {
     // FIXME add err to the exception message
-    return ThrowException(Exception::TypeError(String::New("SLPOpen failed")));
+    // return ThrowException(Exception::Error(String::New("SLPOpen failed")));
   }
   NodeOpenSLP* obj = new NodeOpenSLP(handle);
+  obj->m_lasterr = err;
   obj->Wrap(args.This());
   return args.This();
 }
@@ -174,6 +172,7 @@ void SLPCALLBACK nodeSLPRegReport(SLPHandle hSLP, SLPError errCode, void *pvCook
 // SLPSrvURLCallback
 SLPBoolean SLPCALLBACK nodeSLPSrvURLCallback(SLPHandle hSLP, const char* pcSrvURL,
   unsigned short sLifetime, SLPError errCode, void *pvCookie) {
+  fprintf(stderr, "%s %d\n", pcSrvURL, errCode);
   ObjectCallback* oc = static_cast<ObjectCallback*>(pvCookie);
   switch (errCode) {
     case SLP_OK:
@@ -213,17 +212,17 @@ Handle<Value> NodeOpenSLP::Reg(const Arguments& args) {
   String::AsciiValue srvURL(args[0]);
   String::AsciiValue srvType(args[2]);
   String::AsciiValue attrs(args[3]);
-  SLPError ret = SLPReg(obj->m_handle, *srvURL, args[1]->Uint32Value(),
+  obj->m_lasterr = SLPReg(obj->m_handle, *srvURL, args[1]->Uint32Value(),
     *srvType, *attrs, SLP_TRUE, &nodeSLPRegReport, obj);
-  return scope.Close(Integer::New(ret));
+  return scope.Close(Integer::New(obj->m_lasterr));
 }
 
 Handle<Value> NodeOpenSLP::Dereg(const Arguments& args) {
   HandleScope scope;
   NodeOpenSLP* obj = node::ObjectWrap::Unwrap<NodeOpenSLP>(args.This());
   String::AsciiValue srvURL(args[0]);
-  SLPError ret = SLPDereg(obj->m_handle, *srvURL, &nodeSLPRegReport, obj);
-  return scope.Close(Integer::New(ret));
+  obj->m_lasterr = SLPDereg(obj->m_handle, *srvURL, &nodeSLPRegReport, obj);
+  return scope.Close(Integer::New(obj->m_lasterr));
 }
 
 Handle<Value> NodeOpenSLP::DelAttrs(const Arguments& args) {
@@ -231,18 +230,18 @@ Handle<Value> NodeOpenSLP::DelAttrs(const Arguments& args) {
   NodeOpenSLP* obj = node::ObjectWrap::Unwrap<NodeOpenSLP>(args.This());
   String::AsciiValue srvURL(args[0]);
   String::AsciiValue attrs(args[1]);
-  SLPError ret = SLPDelAttrs(obj->m_handle, *srvURL, *attrs, &nodeSLPRegReport, obj);
-  return scope.Close(Integer::New(ret));
+  obj->m_lasterr = SLPDelAttrs(obj->m_handle, *srvURL, *attrs, &nodeSLPRegReport, obj);
+  return scope.Close(Integer::New(obj->m_lasterr));
 }
 
 Handle<Value> NodeOpenSLP::FindScopes(const Arguments& args) {
   HandleScope scope;
   NodeOpenSLP* obj = node::ObjectWrap::Unwrap<NodeOpenSLP>(args.This());
   char* scopeList;
-  SLPError ret = SLPFindScopes(obj->m_handle, &scopeList);
-  // XXX schedule a callback to return "scopeList"
+  obj->m_lasterr = SLPFindScopes(obj->m_handle, &scopeList);
+  Local<String> result = String::New(scopeList);
   SLPFree(scopeList);
-  return scope.Close(Integer::New(ret));
+  return scope.Close(result);
 }
 
 Handle<Value> NodeOpenSLP::FindSrvs(const Arguments& args) {
@@ -251,9 +250,16 @@ Handle<Value> NodeOpenSLP::FindSrvs(const Arguments& args) {
   String::AsciiValue serviceType(args[0]);
   String::AsciiValue scopeList(args[1]);
   String::AsciiValue searchFilter(args[2]);
-  SLPError ret = SLPFindSrvs(obj->m_handle, *serviceType, *scopeList, *searchFilter,
-    &nodeSLPSrvURLCallback, obj);
-  return scope.Close(Integer::New(ret));
+
+  return scope.Close(Integer::New(obj->m_lasterr));
+  // uv_queue_work(uv_default_loop(), work_req, ZCtx::Process, ZCtx::After);
+
+  // ObjectCallback* oc = new ObjectCallback();
+  // oc->obj = obj;
+  // oc->callback = Persistent<Function>::New(Local<Function>::Cast(args[3]));
+  // obj->m_lasterr = SLPFindSrvs(obj->m_handle, *serviceType, *scopeList, *searchFilter,
+  //   &nodeSLPSrvURLCallback, oc);
+  // return scope.Close(Integer::New(obj->m_lasterr));
 }
 
 Handle<Value> NodeOpenSLP::FindSrvTypes(const Arguments& args) {
@@ -261,9 +267,9 @@ Handle<Value> NodeOpenSLP::FindSrvTypes(const Arguments& args) {
   NodeOpenSLP* obj = node::ObjectWrap::Unwrap<NodeOpenSLP>(args.This());
   String::AsciiValue namingAuthority(args[0]);
   String::AsciiValue scopeList(args[1]);
-  SLPError ret = SLPFindSrvTypes(obj->m_handle, *namingAuthority, *scopeList,
+  obj->m_lasterr = SLPFindSrvTypes(obj->m_handle, *namingAuthority, *scopeList,
     &nodeSLPSrvTypeCallback, obj);
-  return scope.Close(Integer::New(ret));
+  return scope.Close(Integer::New(obj->m_lasterr));
 }
 
 Handle<Value> NodeOpenSLP::FindAttrs(const Arguments& args) {
@@ -272,7 +278,13 @@ Handle<Value> NodeOpenSLP::FindAttrs(const Arguments& args) {
   String::AsciiValue urlOrServiceType(args[0]);
   String::AsciiValue scopeList(args[1]);
   String::AsciiValue attrIds(args[2]);
-  SLPError ret = SLPFindAttrs(obj->m_handle, *urlOrServiceType, *scopeList, *attrIds,
+  obj->m_lasterr = SLPFindAttrs(obj->m_handle, *urlOrServiceType, *scopeList, *attrIds,
     &nodeSLPAttrCallback, obj);
-  return scope.Close(Integer::New(ret));
+  return scope.Close(Integer::New(obj->m_lasterr));
+}
+
+Handle<Value> NodeOpenSLP::GetLastError(Local<String> property, const AccessorInfo& info) {
+  HandleScope scope;
+  NodeOpenSLP* obj = node::ObjectWrap::Unwrap<NodeOpenSLP>(info.This());
+  return scope.Close(Integer::New(obj->m_lasterr));
 }
