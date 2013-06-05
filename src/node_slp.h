@@ -27,7 +27,11 @@ private:
   static v8::Handle<v8::Value> FindSrvTypes(const v8::Arguments& args);
   static v8::Handle<v8::Value> FindAttrs(const v8::Arguments& args);
 
+  static v8::Handle<v8::Value> GetLastError(v8::Local<v8::String> property,
+    const v8::AccessorInfo& info);
+
   SLPHandle m_handle;
+  SLPError m_lasterr;
 };
 
 #endif /* __NODE_SLP_H__ */
