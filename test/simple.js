@@ -3,6 +3,12 @@ var test = tap.test;
 var plan = tap.plan;
 var slp = require('..');
 
+var service = {
+  type: 'service:myservice.x',
+  host: '127.0.0.1',
+  port: 3306,
+  addr: function() { return this.type + '://' + this.host + ':' + this.port; }
+};
 
 test('load module', function (t) {
   t.ok(slp, 'node OpenSLP loaded');
@@ -11,6 +17,10 @@ test('load module', function (t) {
   t.equal(slp.escape('foo=bar'), 'foo\\3Dbar', 'escape');
   t.equal(slp.unescape('foo\\3Dbar'), 'foo=bar', 'unescape');
   t.equal(slp.property('foobar'), null, 'foobar property exists?!');
+  var parsed = slp.parseSrvUrl(service.addr());
+  t.equal(parsed.type, service.type);
+  t.equal(parsed.host, service.host);
+  t.equal(parsed.port, service.port);
   t.end();
 });
 
@@ -20,26 +30,39 @@ test('find scopes', function (t) {
   t.end();
 });
 
-var service_addr = 'service:myservice.myorg://127.0.0.1:3306';
-var service_name = 'myservice.myorg';
-
 test('register service', function (t) {
-  slp.reg(service_addr, slp.MAX_LIFETIME, '', function (err) {
+  slp.reg(service.addr(), slp.MAX_LIFETIME, '(attr1=val1),(attr2=val2)', function (err) {
     t.equal(err, null, 'error');
     t.end();
   });
 });
 
-test('find servers', function (t) {
-  slp.findSrvs(service_name, null, null, function (err, servers) {
-    console.error(servers);
+test('find service types', function (t) {
+  slp.findSrvTypes('*', 'default', function (err, srvTypes) {
+    console.error('types', srvTypes);
+    t.equal(err, null, 'error');
+    t.end();
+  });
+});
+
+test('find services', function (t) {
+  slp.findSrvs(service.type, '', '', function (err, srvs) {
+    console.error('services', srvs);
+    t.equal(err, null, 'error');
+    t.end();
+  });
+});
+
+test('find attributes', function (t) {
+  slp.findAttrs(service.type, '', '', function (err, attrs) {
+    console.error('attrs', attrs);
     t.equal(err, null, 'error');
     t.end();
   });
 });
 
 test('deregister service', function (t) {
-  slp.dereg(service_addr, function (err) {
+  slp.dereg(service.addr(), function (err) {
     t.equal(err, null, 'error');
     t.end();
   });
