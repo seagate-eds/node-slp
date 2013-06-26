@@ -26,7 +26,8 @@ struct FindAttrsBaton : Baton {
   static SLPBoolean SLPCALLBACK callbackSLP(SLPHandle hSLP, const char* pcAttrList, SLPError errCode, void *pvCookie) {
     FindAttrsBaton* baton = static_cast<FindAttrsBaton*>(pvCookie);
     baton->slp_error = errCode;
-    baton->result = pcAttrList;
+    if (pcAttrList != NULL)
+      baton->result = pcAttrList;
     return SLP_TRUE;
   }
 
