@@ -1,36 +1,46 @@
 var tap = require('tap');
 var test = tap.test;
 var plan = tap.plan;
-var nodeSLP;
+var slp = require('..');
 
 
 test('load module', function (t) {
-  nodeSLP = require('..');
-  t.ok(nodeSLP.OpenSLP, 'OpenSLP class');
-  t.ok(nodeSLP.version, 'version');
-  t.ok(nodeSLP.refreshInterval >= 0, 'refreshInterval');
-  t.equal(nodeSLP.escape('foo=bar'), 'foo\\3Dbar', 'escape');
-  t.equal(nodeSLP.unescape('foo\\3Dbar'), 'foo=bar', 'unescape');
-  t.equal(nodeSLP.property('foobar'), null, 'foobar property exists?!');
-
-  /*var parsed = nodeSLP.parseSrvUrl('service:bb:session/foo:1222');
-  console.error(parsed);
-  t.ok(parsed);*/
-
+  t.ok(slp, 'node OpenSLP loaded');
+  t.ok(slp.version, 'version');
+  t.ok(slp.refreshInterval >= 0, 'refreshInterval');
+  t.equal(slp.escape('foo=bar'), 'foo\\3Dbar', 'escape');
+  t.equal(slp.unescape('foo\\3Dbar'), 'foo=bar', 'unescape');
+  t.equal(slp.property('foobar'), null, 'foobar property exists?!');
   t.end();
 });
 
-test('create obj', function (t) {
-  var slp = new nodeSLP.OpenSLP();
-  t.ok(slp, 'new openslp');
-  t.equal(slp.lastError, 0, 'openslp error');
+test('find scopes', function (t) {
   var scopes = slp.findScopes();
   t.ok(scopes.indexOf('default') >= 0, 'default scope');
   t.end();
-  // slp.findSrvs('service:bb', '', '', function (err, services) {
-  //   console.error('err', err);
-  //   console.error('services', services);
-  //   t.ok(services);
-  //   t.end();
-  // });
+});
+
+var service_addr = 'service:myservice.myorg://127.0.0.1:3306';
+var service_name = 'myservice.myorg';
+
+test('register service', function (t) {
+  slp.reg(service_addr, slp.MAX_LIFETIME, '', function (err) {
+    t.equal(err, null, 'error');
+    t.end();
+  });
+});
+
+test('find servers', function (t) {
+  slp.findSrvs(service_name, null, null, function (err, servers) {
+    console.error(servers);
+    t.equal(err, null, 'error');
+    t.end();
+  });
+});
+
+test('deregister service', function (t) {
+  slp.dereg(service_addr, function (err) {
+    t.equal(err, null, 'error');
+    t.end();
+  });
 });

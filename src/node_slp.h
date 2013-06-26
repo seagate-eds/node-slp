@@ -7,31 +7,5 @@
 
 #include <v8.h>
 #include <node.h>
-#include <slp.h>
-
-class NodeOpenSLP : public node::ObjectWrap {
-public:
-  static void Init(v8::Handle<v8::Object> target);
-
-private:
-  static v8::Handle<v8::Value> NewInstance(const v8::Arguments& args);
-
-  NodeOpenSLP(SLPHandle _handle);
-  ~NodeOpenSLP();
-
-  static v8::Handle<v8::Value> Reg(const v8::Arguments& args);
-  static v8::Handle<v8::Value> Dereg(const v8::Arguments& args);
-  static v8::Handle<v8::Value> DelAttrs(const v8::Arguments& args);
-  static v8::Handle<v8::Value> FindScopes(const v8::Arguments& args);
-  static v8::Handle<v8::Value> FindSrvs(const v8::Arguments& args);
-  static v8::Handle<v8::Value> FindSrvTypes(const v8::Arguments& args);
-  static v8::Handle<v8::Value> FindAttrs(const v8::Arguments& args);
-
-  static v8::Handle<v8::Value> GetLastError(v8::Local<v8::String> property,
-    const v8::AccessorInfo& info);
-
-  SLPHandle m_handle;
-  SLPError m_lasterr;
-};
 
 #endif /* __NODE_SLP_H__ */
