@@ -1,3 +1,5 @@
 # OpenSLP bindings for nodejs
 
-WIP, not working
+WIP, kinda works
+
+ps: don't forget to start the OpenSLP service
