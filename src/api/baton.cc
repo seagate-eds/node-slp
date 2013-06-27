@@ -65,4 +65,5 @@ void clear_handles() {
   for (std::list<SLPHandle>::iterator it = free_handles.begin(); it != free_handles.end(); ++it) {
     SLPClose(*it);
   }
+  free_handles.clear();
 }
