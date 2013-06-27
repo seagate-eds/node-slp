@@ -4,11 +4,13 @@ var plan = tap.plan;
 var slp = require('..');
 
 var service = {
-  type: 'service:myservice.x',
+  type: 'service:myservice',
   host: '127.0.0.1',
   port: 3306,
   addr: function() { return this.type + '://' + this.host + ':' + this.port; }
 };
+
+var scopes;
 
 test('load module', function (t) {
   t.ok(slp, 'node OpenSLP loaded');
@@ -18,15 +20,15 @@ test('load module', function (t) {
   t.equal(slp.unescape('foo\\3Dbar'), 'foo=bar', 'unescape');
   t.equal(slp.property('foobar'), null, 'foobar property exists?!');
   var parsed = slp.parseSrvUrl(service.addr());
-  t.equal(parsed.type, service.type);
-  t.equal(parsed.host, service.host);
-  t.equal(parsed.port, service.port);
+  t.equal(parsed.type, service.type, 'service type');
+  t.equal(parsed.host, service.host, 'service host');
+  t.equal(parsed.port, service.port, 'service port');
   t.end();
 });
 
 test('find scopes', function (t) {
-  var scopes = slp.findScopes();
-  t.ok(scopes.indexOf('default') >= 0, 'default scope');
+  scopes = slp.findScopes().split(',');
+  t.ok(scopes.length > 0, 'default scope');
   t.end();
 });
 
@@ -38,8 +40,7 @@ test('register service', function (t) {
 });
 
 test('find service types', function (t) {
-  slp.findSrvTypes('*', 'default', function (err, srvTypes) {
-    console.error('types', srvTypes);
+  slp.findSrvTypes('*', scopes[0], function (err, srvTypes) {
     t.equal(err, null, 'error');
     t.end();
   });
@@ -47,7 +48,6 @@ test('find service types', function (t) {
 
 test('find services', function (t) {
   slp.findSrvs(service.type, '', '', function (err, srvs) {
-    console.error('services', srvs);
     t.equal(err, null, 'error');
     t.end();
   });
@@ -55,7 +55,6 @@ test('find services', function (t) {
 
 test('find attributes', function (t) {
   slp.findAttrs(service.type, '', '', function (err, attrs) {
-    console.error('attrs', attrs);
     t.equal(err, null, 'error');
     t.end();
   });
