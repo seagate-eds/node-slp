@@ -10,8 +10,6 @@ var service = {
   addr: function() { return this.type + '://' + this.host + ':' + this.port; }
 };
 
-var scopes;
-
 test('load module', function (t) {
   t.ok(slp, 'node OpenSLP loaded');
   t.ok(slp.version, 'version');
@@ -27,8 +25,9 @@ test('load module', function (t) {
 });
 
 test('find scopes', function (t) {
-  scopes = slp.findScopes().split(',');
-  t.ok(scopes.length > 0, 'default scope');
+  var scopes = slp.findScopes().split(',');
+  t.ok(scopes.length > 0, 'no scope found');
+  t.ok(scopes.indexOf('DEFAULT') >= 0, 'default scope');
   t.end();
 });
 
@@ -40,7 +39,7 @@ test('register service', function (t) {
 });
 
 test('find service types', function (t) {
-  slp.findSrvTypes('*', scopes[0], function (err, srvTypes) {
+  slp.findSrvTypes('*', 'DEFAULT', function (err, srvTypes) {
     t.equal(err, null, 'error');
     t.end();
   });
