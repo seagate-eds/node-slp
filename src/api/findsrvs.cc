@@ -13,11 +13,10 @@ struct FindSrvsBaton : Baton {
   // result array
   std::vector< std::pair<std::string, unsigned short> > result;
 
-  FindSrvsBaton(const Arguments& args) :
-    Baton(),
-    serviceType(args[0]),
-    scopeList(args[1]),
-    searchFilter(args[2]) { }
+  FindSrvsBaton(const Arguments& args) : Baton(), serviceType(args[0]), scopeList(args[1]), searchFilter(args[2]) {
+    HandleScope scope;
+    callback = Persistent<Function>::New(Local<Function>::Cast(args[3]));
+  }
 
   static void work(uv_work_t* work_req) {
     FindSrvsBaton* baton = static_cast<FindSrvsBaton*>(work_req->data);
@@ -60,13 +59,8 @@ struct FindSrvsBaton : Baton {
 };
 
 Handle<Value> FindSrvs(const Arguments& args) {
-  HandleScope scope;
-
   FindSrvsBaton* baton = new FindSrvsBaton(args);
   baton->request.data = baton;
-  baton->callback = Persistent<Function>::New(Local<Function>::Cast(args[3]));
-
-  // launch
   homerun<FindSrvsBaton>(*baton);
   return Undefined();
 }

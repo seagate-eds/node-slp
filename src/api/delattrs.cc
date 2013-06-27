@@ -9,10 +9,10 @@ struct DelAttrsBaton : Baton {
   String::Utf8Value attrs;
   // result = slp_error
 
-  DelAttrsBaton(const Arguments& args) :
-    Baton(),
-    srvURL(args[0]),
-    attrs(args[1]) { }
+  DelAttrsBaton(const Arguments& args) : Baton(), srvURL(args[0]), attrs(args[1]) {
+    HandleScope scope;
+    callback = Persistent<Function>::New(Local<Function>::Cast(args[2]));
+  }
 
   static void work(uv_work_t* work_req) {
     DelAttrsBaton* baton = static_cast<DelAttrsBaton*>(work_req->data);
@@ -41,13 +41,8 @@ struct DelAttrsBaton : Baton {
 };
 
 Handle<Value> DelAttrs(const Arguments& args) {
-  HandleScope scope;
-
   DelAttrsBaton* baton = new DelAttrsBaton(args);
   baton->request.data = baton;
-  baton->callback = Persistent<Function>::New(Local<Function>::Cast(args[2]));
-
-  // launch
   homerun<DelAttrsBaton>(*baton);
   return Undefined();
 }

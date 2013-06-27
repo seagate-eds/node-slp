@@ -6,15 +6,14 @@ using namespace v8;
 struct RegBaton : Baton {
   // arguments
   String::Utf8Value srvURL;
-  unsigned short usLifetime;
   String::Utf8Value attrs;
+  unsigned short usLifetime;
   // result = slp_error
 
-  RegBaton(const Arguments& args) :
-    Baton(),
-    srvURL(args[0]),
-    usLifetime(args[1]->Uint32Value()),
-    attrs(args[2]) { }
+  RegBaton(const Arguments& args) : Baton(), srvURL(args[0]), attrs(args[2]), usLifetime(args[1]->Uint32Value()) {
+    HandleScope scope;
+    callback = Persistent<Function>::New(Local<Function>::Cast(args[3]));
+  }
 
   static void work(uv_work_t* work_req) {
     RegBaton* baton = static_cast<RegBaton*>(work_req->data);
@@ -43,13 +42,8 @@ struct RegBaton : Baton {
 };
 
 Handle<Value> Reg(const Arguments& args) {
-  HandleScope scope;
-
   RegBaton* baton = new RegBaton(args);
   baton->request.data = baton;
-  baton->callback = Persistent<Function>::New(Local<Function>::Cast(args[3]));
-
-  // launch
   homerun<RegBaton>(*baton);
   return Undefined();
 }

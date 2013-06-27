@@ -11,10 +11,10 @@ struct FindSrvTypesBaton : Baton {
   // result array
   std::vector<std::string> result;
 
-  FindSrvTypesBaton(const Arguments& args) :
-    Baton(),
-    namingAuthority(args[0]),
-    scopeList(args[1]) { }
+  FindSrvTypesBaton(const Arguments& args) : Baton(), namingAuthority(args[0]), scopeList(args[1]) {
+    HandleScope scope;
+    callback = Persistent<Function>::New(Local<Function>::Cast(args[2]));
+  }
 
   static void work(uv_work_t* work_req) {
     FindSrvTypesBaton* baton = static_cast<FindSrvTypesBaton*>(work_req->data);
@@ -54,13 +54,8 @@ struct FindSrvTypesBaton : Baton {
 };
 
 Handle<Value> FindSrvTypes(const Arguments& args) {
-  HandleScope scope;
-
   FindSrvTypesBaton* baton = new FindSrvTypesBaton(args);
   baton->request.data = baton;
-  baton->callback = Persistent<Function>::New(Local<Function>::Cast(args[2]));
-
-  // launch
   homerun<FindSrvTypesBaton>(*baton);
   return Undefined();
 }

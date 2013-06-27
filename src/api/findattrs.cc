@@ -11,11 +11,10 @@ struct FindAttrsBaton : Baton {
   // result
   std::string result;
 
-  FindAttrsBaton(const Arguments& args) :
-    Baton(),
-    urlOrServiceType(args[0]),
-    scopeList(args[1]),
-    attrIds(args[2]) { }
+  FindAttrsBaton(const Arguments& args) : Baton(), urlOrServiceType(args[0]), scopeList(args[1]), attrIds(args[2]) {
+    HandleScope scope;
+    callback = Persistent<Function>::New(Local<Function>::Cast(args[3]));
+  }
 
   static void work(uv_work_t* work_req) {
     FindAttrsBaton* baton = static_cast<FindAttrsBaton*>(work_req->data);
@@ -47,13 +46,8 @@ struct FindAttrsBaton : Baton {
 };
 
 Handle<Value> FindAttrs(const Arguments& args) {
-  HandleScope scope;
-
   FindAttrsBaton* baton = new FindAttrsBaton(args);
   baton->request.data = baton;
-  baton->callback = Persistent<Function>::New(Local<Function>::Cast(args[3]));
-
-  // launch
   homerun<FindAttrsBaton>(*baton);
   return Undefined();
 }

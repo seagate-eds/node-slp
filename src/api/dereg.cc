@@ -8,9 +8,10 @@ struct DeregBaton : Baton {
   String::Utf8Value srvURL;
   // result = slp_error
 
-  DeregBaton(const Arguments& args) :
-    Baton(),
-    srvURL(args[0]) { }
+  DeregBaton(const Arguments& args) : Baton(), srvURL(args[0]) {
+    HandleScope scope;
+    callback = Persistent<Function>::New(Local<Function>::Cast(args[1]));
+  }
 
   static void work(uv_work_t* work_req) {
     DeregBaton* baton = static_cast<DeregBaton*>(work_req->data);
@@ -38,13 +39,8 @@ struct DeregBaton : Baton {
 };
 
 Handle<Value> Dereg(const Arguments& args) {
-  HandleScope scope;
-
   DeregBaton* baton = new DeregBaton(args);
   baton->request.data = baton;
-  baton->callback = Persistent<Function>::New(Local<Function>::Cast(args[1]));
-
-  // launch
   homerun<DeregBaton>(*baton);
   return Undefined();
 }
