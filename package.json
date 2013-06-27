@@ -7,7 +7,7 @@
     "test": "./node_modules/.bin/tap --stderr test/*.js"
   },
   "devDependencies": {
-    "tap": "*"
+    "tap": "0.4.x"
   },
   "repository": "https://github.com/tralamazza/node-slp",
   "author": "Daniel Tralamazza",
