@@ -28,12 +28,12 @@ Handle<Value> GetMaxLifetime(Local<String> property, const AccessorInfo& info) {
 
 Handle<Value> ParseSrvURL(const Arguments& args) {
   HandleScope scope;
-  String::AsciiValue srvURL(args[0]);
+  String::Utf8Value srvURL(args[0]);
   SLPSrvURL* pSrvURL;
   SLPError ret = SLPParseSrvURL(*srvURL, &pSrvURL);
   if (ret != SLP_OK) {
     SLPFree(pSrvURL);
-    return ThrowException(Exception::Error(String::New("ParseSrvURL error")));
+    return ThrowException(Exception::Error(String::New(slp_error_message(ret))));
   }
   // build and return an object
   Local<Object> obj = Object::New();
@@ -48,38 +48,34 @@ Handle<Value> ParseSrvURL(const Arguments& args) {
 
 Handle<Value> Escape(const Arguments& args) {
   HandleScope scope;
-  String::AsciiValue inbuf(args[0]);
+  String::Utf8Value inbuf(args[0]);
   char* outBuf;
   SLPBoolean isTag = (args.Length() > 1 && args[1]->BooleanValue()) ? SLP_TRUE : SLP_FALSE;
   SLPError ret = SLPEscape(*inbuf, &outBuf, isTag);
   Local<String> result = String::New(outBuf);
   SLPFree(outBuf);
-  switch (ret) {
-    case SLP_OK:
-      return scope.Close(result);
-    default:
-      return ThrowException(Exception::Error(String::New(slp_error_message(ret))));
-  }
+  if (ret == SLP_OK)
+    return scope.Close(result);
+  else
+    return ThrowException(Exception::Error(String::New(slp_error_message(ret))));
 }
 
 Handle<Value> Unescape(const Arguments& args) {
   HandleScope scope;
-  String::AsciiValue inbuf(args[0]);
+  String::Utf8Value inbuf(args[0]);
   char* outBuf;
   SLPError ret = SLPUnescape(*inbuf, &outBuf, args[1]->BooleanValue() ? SLP_TRUE : SLP_FALSE);
   Local<String> result = String::New(outBuf);
   SLPFree(outBuf);
-  switch (ret) {
-    case SLP_OK:
-      return scope.Close(result);
-    default:
-      return ThrowException(Exception::Error(String::New(slp_error_message(ret))));
-  }
+  if (ret == SLP_OK)
+    return scope.Close(result);
+  else
+    return ThrowException(Exception::Error(String::New(slp_error_message(ret))));
 }
 
 Handle<Value> GetSetProperty(const Arguments& args) {
   HandleScope scope;
-  String::AsciiValue name(args[0]);
+  String::Utf8Value name(args[0]);
   if (args.Length() > 1) {
     String::Utf8Value value(args[1]);
     SLPSetProperty(*name, *value);
