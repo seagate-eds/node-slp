@@ -4,7 +4,7 @@
 
 ## Installation
 
-```npm install slp```
+    npm install slp
 
 ## API
 
