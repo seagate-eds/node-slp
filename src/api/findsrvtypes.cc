@@ -54,8 +54,6 @@ struct FindSrvTypesBaton : Baton {
 };
 
 Handle<Value> FindSrvTypes(const Arguments& args) {
-  FindSrvTypesBaton* baton = new FindSrvTypesBaton(args);
-  baton->request.data = baton;
-  homerun<FindSrvTypesBaton>(*baton);
+  homerun(new FindSrvTypesBaton(args));
   return Undefined();
 }

@@ -41,8 +41,6 @@ struct DelAttrsBaton : Baton {
 };
 
 Handle<Value> DelAttrs(const Arguments& args) {
-  DelAttrsBaton* baton = new DelAttrsBaton(args);
-  baton->request.data = baton;
-  homerun<DelAttrsBaton>(*baton);
+  homerun(new DelAttrsBaton(args));
   return Undefined();
 }

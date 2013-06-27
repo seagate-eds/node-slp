@@ -39,8 +39,6 @@ struct DeregBaton : Baton {
 };
 
 Handle<Value> Dereg(const Arguments& args) {
-  DeregBaton* baton = new DeregBaton(args);
-  baton->request.data = baton;
-  homerun<DeregBaton>(*baton);
+  homerun(new DeregBaton(args));
   return Undefined();
 }

@@ -59,8 +59,6 @@ struct FindSrvsBaton : Baton {
 };
 
 Handle<Value> FindSrvs(const Arguments& args) {
-  FindSrvsBaton* baton = new FindSrvsBaton(args);
-  baton->request.data = baton;
-  homerun<FindSrvsBaton>(*baton);
+  homerun(new FindSrvsBaton(args));
   return Undefined();
 }

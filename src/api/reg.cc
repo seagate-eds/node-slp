@@ -42,8 +42,6 @@ struct RegBaton : Baton {
 };
 
 Handle<Value> Reg(const Arguments& args) {
-  RegBaton* baton = new RegBaton(args);
-  baton->request.data = baton;
-  homerun<RegBaton>(*baton);
+  homerun(new RegBaton(args));
   return Undefined();
 }

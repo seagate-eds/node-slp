@@ -24,8 +24,9 @@ struct Baton {
   // static void afterWork(uv_work_t* work_req) {}
 };
 
-template <typename T> inline static void homerun(T& baton) {
-  uv_queue_work(uv_default_loop(), &baton.request, &T::work, &T::afterWork);
+template <typename T> inline static void homerun(T* baton) {
+  baton->request.data = baton;
+  uv_queue_work(uv_default_loop(), &baton->request, &T::work, &T::afterWork);
 }
 
 const char* slp_error_message(const SLPError error);

@@ -46,8 +46,6 @@ struct FindAttrsBaton : Baton {
 };
 
 Handle<Value> FindAttrs(const Arguments& args) {
-  FindAttrsBaton* baton = new FindAttrsBaton(args);
-  baton->request.data = baton;
-  homerun<FindAttrsBaton>(*baton);
+  homerun(new FindAttrsBaton(args));
   return Undefined();
 }
