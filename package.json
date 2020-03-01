@@ -12,5 +12,8 @@
   "repository": "https://github.com/tralamazza/node-slp",
   "author": "Daniel Tralamazza",
   "license": "MIT",
-  "readmeFilename": "README.md"
+  "readmeFilename": "README.md",
+  "dependencies": {
+    "nan": "^2.14.0"
+  }
 }

@@ -8,25 +8,20 @@
 #include "api/findsrvtypes.h"
 #include "api/reg.h"
 
-using namespace v8;
-
-Handle<Value> Version(Local<String> property, const AccessorInfo& info) {
-  HandleScope scope;
-  // XXX OpenSLP version developed for/against
-  return scope.Close(String::New("1.2.1"));
+void Version(const Nan::FunctionCallbackInfo<v8::Value>& info) {
+  info.GetReturnValue().Set(Nan::New("1.2.1").ToLocalChecked());
 }
 
-Handle<Value> GetRefreshInterval(Local<String> property, const AccessorInfo& info) {
-  HandleScope scope;
-  return scope.Close(Integer::New(SLPGetRefreshInterval()));
+void GetRefreshInterval(const Nan::FunctionCallbackInfo<v8::Value>& info) {
+  info.GetReturnValue().Set(Nan::New(SLPGetRefreshInterval()));
 }
 
-Handle<Value> GetMaxLifetime(Local<String> property, const AccessorInfo& info) {
-  HandleScope scope;
-  return scope.Close(Integer::New(SLP_LIFETIME_MAXIMUM));
+void GetMaxLifetime(const Nan::FunctionCallbackInfo<v8::Value>& info) {
+  info.GetReturnValue().Set(Nan::New(SLP_LIFETIME_MAXIMUM));
 }
 
-Handle<Value> ParseSrvURL(const Arguments& args) {
+/*
+Local<Value> ParseSrvURL(const Arguments& args) {
   HandleScope scope;
   String::Utf8Value srvURL(args[0]);
   SLPSrvURL* pSrvURL;
@@ -46,7 +41,7 @@ Handle<Value> ParseSrvURL(const Arguments& args) {
   return scope.Close(obj);
 }
 
-Handle<Value> Escape(const Arguments& args) {
+Local<Value> Escape(const Arguments& args) {
   HandleScope scope;
   String::Utf8Value inbuf(args[0]);
   char* outBuf;
@@ -60,7 +55,7 @@ Handle<Value> Escape(const Arguments& args) {
     return ThrowException(Exception::Error(String::New(slp_error_message(ret))));
 }
 
-Handle<Value> Unescape(const Arguments& args) {
+Local<Value> Unescape(const Arguments& args) {
   HandleScope scope;
   String::Utf8Value inbuf(args[0]);
   char* outBuf;
@@ -73,7 +68,7 @@ Handle<Value> Unescape(const Arguments& args) {
     return ThrowException(Exception::Error(String::New(slp_error_message(ret))));
 }
 
-Handle<Value> GetSetProperty(const Arguments& args) {
+Local<Value> GetSetProperty(const Arguments& args) {
   HandleScope scope;
   String::Utf8Value name(args[0]);
   if (args.Length() > 1) {
@@ -86,7 +81,7 @@ Handle<Value> GetSetProperty(const Arguments& args) {
   }
 }
 
-Handle<Value> FindScopes(const Arguments& args) {
+Local<Value> FindScopes(const Arguments& args) {
   HandleScope scope;
   char* scopeList;
   SLPHandle handle = acquire_handle();
@@ -96,12 +91,15 @@ Handle<Value> FindScopes(const Arguments& args) {
   SLPFree(scopeList);
   return scope.Close(result);
 }
+*/
 
+/*
 extern "C" void init(Handle<Object> target) {
   // properties
   target->SetAccessor(String::NewSymbol("version"), Version);
   target->SetAccessor(String::NewSymbol("refreshInterval"), GetRefreshInterval);
   target->SetAccessor(String::NewSymbol("MAX_LIFETIME"), GetMaxLifetime);
+
   // methods
   NODE_SET_METHOD(target, "parseSrvUrl", ParseSrvURL);
   NODE_SET_METHOD(target, "escape", Escape);
@@ -114,8 +112,34 @@ extern "C" void init(Handle<Object> target) {
   NODE_SET_METHOD(target, "reg", Reg);
   NODE_SET_METHOD(target, "dereg", Dereg);
   NODE_SET_METHOD(target, "delAttrs", DelAttrs);
+
   // cleanup
   atexit(clear_handles);
 }
+*/
 
-NODE_MODULE(slp, init)
+void Init(v8::Local<v8::Object> exports) {
+  v8::Local<v8::Context> context = exports->CreationContext();
+  exports->Set(context,
+               Nan::New("version").ToLocalChecked(),
+               Nan::New<v8::FunctionTemplate>(Version)
+                   ->GetFunction(context)
+                   .ToLocalChecked());
+  exports->Set(context,
+               Nan::New("refreshInterval").ToLocalChecked(),
+               Nan::New<v8::FunctionTemplate>(GetRefreshInterval)
+                   ->GetFunction(context)
+                   .ToLocalChecked());
+  exports->Set(context,
+               Nan::New("MAX_LIFETIME").ToLocalChecked(),
+               Nan::New<v8::FunctionTemplate>(GetMaxLifetime)
+                   ->GetFunction(context)
+                   .ToLocalChecked());
+  exports->Set(context,
+               Nan::New("findSrvs").ToLocalChecked(),
+               Nan::New<v8::FunctionTemplate>(FindSrvs)
+                   ->GetFunction(context)
+                   .ToLocalChecked());
+}
+
+NODE_MODULE(slp, Init)

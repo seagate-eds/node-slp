@@ -5,6 +5,6 @@
 
 using namespace v8;
 
-Handle<Value> FindSrvTypes(const Arguments& args);
+Local<Value> FindSrvTypes(const Arguments& args);
 
 #endif /* __FINDSRVTYPES_H__ */

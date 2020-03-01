@@ -41,7 +41,7 @@ struct RegBaton : Baton {
   }
 };
 
-Handle<Value> Reg(const Arguments& args) {
+Local<Value> Reg(const Arguments& args) {
   homerun(new RegBaton(args));
   return Undefined();
 }

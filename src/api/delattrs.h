@@ -5,6 +5,6 @@
 
 using namespace v8;
 
-Handle<Value> DelAttrs(const Arguments& args);
+Local<Value> DelAttrs(const Arguments& args);
 
 #endif /* __DELATTRS_H__ */

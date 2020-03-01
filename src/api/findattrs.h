@@ -5,6 +5,6 @@
 
 using namespace v8;
 
-Handle<Value> FindAttrs(const Arguments& args);
+Local<Value> FindAttrs(const Arguments& args);
 
 #endif /* __FINDATTRS_H__ */

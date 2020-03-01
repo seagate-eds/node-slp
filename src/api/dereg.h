@@ -3,8 +3,8 @@
 
 #include "baton.h"
 
-using namespace v8;
+using namespace v8::internal;
 
-Handle<Value> Dereg(const Arguments& args);
+Local<Value> Dereg(const Arguments& args);
 
 #endif /* __DEREG_H__ */

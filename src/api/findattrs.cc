@@ -45,7 +45,7 @@ struct FindAttrsBaton : Baton {
   }
 };
 
-Handle<Value> FindAttrs(const Arguments& args) {
+Local<Value> FindAttrs(const Arguments& args) {
   homerun(new FindAttrsBaton(args));
   return Undefined();
 }

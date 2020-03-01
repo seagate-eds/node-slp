@@ -38,7 +38,7 @@ struct DeregBaton : Baton {
   }
 };
 
-Handle<Value> Dereg(const Arguments& args) {
+Local<Value> Dereg(const Arguments& args) {
   homerun(new DeregBaton(args));
   return Undefined();
 }

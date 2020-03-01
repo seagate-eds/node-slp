@@ -53,7 +53,7 @@ struct FindSrvTypesBaton : Baton {
   }
 };
 
-Handle<Value> FindSrvTypes(const Arguments& args) {
+Local<Value> FindSrvTypes(const Arguments& args) {
   homerun(new FindSrvTypesBaton(args));
   return Undefined();
 }

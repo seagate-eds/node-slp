@@ -3,8 +3,6 @@
 
 #include "baton.h"
 
-using namespace v8;
-
-Handle<Value> FindSrvs(const Arguments& args);
+NAN_METHOD(FindSrvs);
 
 #endif /* __FINDSRVS_H__ */

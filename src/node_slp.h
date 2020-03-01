@@ -8,4 +8,7 @@
 #include <v8.h>
 #include <node.h>
 
+#include <nan.h>
+
+
 #endif /* __NODE_SLP_H__ */

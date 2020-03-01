@@ -1,8 +1,7 @@
 #ifndef __BATON_H__
 #define __BATON_H__
 
-#include <v8.h>
-#include <uv.h>
+#include <nan.h>
 #include <slp.h>
 
 using namespace v8;
@@ -13,7 +12,7 @@ void clear_handles();
 
 struct Baton {
   uv_work_t request;
-  Persistent<Function> callback;
+  Nan::Callback *callback;
   SLPHandle slp_handle;
   SLPError slp_error;
 

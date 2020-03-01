@@ -40,7 +40,7 @@ struct DelAttrsBaton : Baton {
   }
 };
 
-Handle<Value> DelAttrs(const Arguments& args) {
+Local<Value> DelAttrs(const Arguments& args) {
   homerun(new DelAttrsBaton(args));
   return Undefined();
 }

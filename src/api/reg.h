@@ -5,6 +5,6 @@
 
 using namespace v8;
 
-Handle<Value> Reg(const Arguments& args);
+Local<Value> Reg(const Arguments& args);
 
 #endif /* __REG_H__ */

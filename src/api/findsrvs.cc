@@ -7,15 +7,14 @@ using namespace v8;
 
 struct FindSrvsBaton : Baton {
   // arguments
-  String::Utf8Value serviceType;
-  String::Utf8Value scopeList;
-  String::Utf8Value searchFilter;
+  Nan::Utf8String serviceType;
+  Nan::Utf8String scopeList;
+  Nan::Utf8String searchFilter;
   // result array
   std::vector< std::pair<std::string, unsigned short> > result;
 
-  FindSrvsBaton(const Arguments& args) : Baton(), serviceType(args[0]), scopeList(args[1]), searchFilter(args[2]) {
-    HandleScope scope;
-    callback = Persistent<Function>::New(Local<Function>::Cast(args[3]));
+  FindSrvsBaton(const Nan::FunctionCallbackInfo<v8::Value>& info) : Baton(), serviceType(info[0]), scopeList(info[1]), searchFilter(info[2]) {
+    callback = new Nan::Callback(Nan::To<Function>(info[3]).ToLocalChecked());
   }
 
   static void work(uv_work_t* work_req) {
@@ -36,29 +35,29 @@ struct FindSrvsBaton : Baton {
     }
   }
 
-  static void afterWork(uv_work_t* work_req) {
-    HandleScope scope;
+  static void afterWork(uv_work_t* work_req, int status) {
+    Nan::HandleScope scope;
     FindSrvsBaton* baton = static_cast<FindSrvsBaton*>(work_req->data);
     if (baton->slp_error < SLP_OK) {
-      Local<Value> argv[1] = { Exception::Error(String::New(slp_error_message(baton->slp_error))) };
-      baton->callback->Call(Context::GetCurrent()->Global(), 1, argv);
+      Local<Value> argv[1] = { Exception::Error(Nan::New<String>(slp_error_message(baton->slp_error)).ToLocalChecked()) };
+      baton->callback->Call(1, argv);
     } else {
-      Local<Array> arr = Array::New(); // [ { url: "", lifetime: 0 }, ... ]
+      Local<Array> arr = Nan::New<Array>(); // [ { url: "", lifetime: 0 }, ... ]
       for (unsigned int i = 0; i < baton->result.size(); i++) {
-        Local<Object> obj = Object::New();
-        obj->Set(String::NewSymbol("url"), String::New(baton->result[i].first.c_str()));
-        obj->Set(String::NewSymbol("lifetime"), Integer::New(baton->result[i].second));
-        arr->Set(i, obj);
+        Local<Object> obj = Nan::New<Object>();
+        obj->Set(obj->CreationContext(), Nan::New<String>("url").ToLocalChecked(), Nan::New<String>(baton->result[i].first.c_str()).ToLocalChecked());
+        obj->Set(obj->CreationContext(), Nan::New<String>("lifetime").ToLocalChecked(), Nan::New<Integer>(baton->result[i].second));
+        arr->Set(obj->CreationContext(), i, obj);
       }
-      Local<Value> argv[2] = { Local<Value>::New(Null()), arr };
-      baton->callback->Call(Context::GetCurrent()->Global(), 2, argv);
+      Local<Value> argv[2] = { Nan::Null(), arr };
+      baton->callback->Call(2, argv);
     }
-    baton->callback.Dispose();
+
+    delete baton->callback;
     delete baton;
   }
 };
 
-Handle<Value> FindSrvs(const Arguments& args) {
-  homerun(new FindSrvsBaton(args));
-  return Undefined();
+void FindSrvs(const Nan::FunctionCallbackInfo<v8::Value>& info) {
+  homerun(new FindSrvsBaton(info));
 }
