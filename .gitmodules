@@ -1,3 +1,3 @@
 [submodule "src/openslp"]
 	path = src/openslp
-	url = ssh://git@github.com/Seagate/openslp.git
+	url = https://github.com/Seagate/openslp.git

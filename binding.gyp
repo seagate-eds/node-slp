@@ -5,7 +5,6 @@
       'defines': [
             'HAVE_CONFIG_H',
             'ENABLE_ASYNC_API',
-            'SLP_VERSION="2.0.0"',
       ],
       'include_dirs' : [
           "<!(node -e \"require('nan')\")",
@@ -66,7 +65,8 @@
 			'src/openslp/openslp/common/slp_win32.c',
 		  ],
  		  'defines': [
-				'LIBSLP_STATIC'
+				'LIBSLP_STATIC',
+            	'SLP_VERSION="2.0.0"'
 		  ],
  	          'libraries': [
 				'-lws2_32'
