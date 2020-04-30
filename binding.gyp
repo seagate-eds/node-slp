@@ -8,7 +8,8 @@
       ],
       'include_dirs' : [
           "<!(node -e \"require('nan')\")",
-          "src",
+#cm	  "src",
+          "src/openslp/openslp", #cm
           "src/openslp/openslp/common",
           "src/openslp/openslp/libslp"
       ],
@@ -77,7 +78,10 @@
 				'ETCDIR="/etc"',
 				'DARWIN'
 		  ],
-        }]
+        }],
+
+        ['OS=="linux"', { 'defines': [ 'ETCDIR="/etc"', 'DEBUG=1', 'LINUX=1'] }],
+
       ],
       'libraries': [
       ]
