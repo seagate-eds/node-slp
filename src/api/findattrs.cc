@@ -1,4 +1,5 @@
 #include <string>
+#include <set>
 #include "findattrs.h"
 
 using namespace v8;
@@ -35,6 +36,79 @@ struct FindAttrsBaton : Baton {
     }
   }
 
+  // parse an attribute
+  static int extract_one_attr(const std::string& src, std::string& attr, std::string& value) {
+    std::string::size_type a = 0, b = 0, c = 0, src_len = src.size();
+
+    // set a to point to first character of attribute name
+    while (a < src_len && src[a] == ',')
+      ++a;
+
+    // empty string => done parsing
+    if (a >= src_len)
+      return 0;
+
+    // if no parens, entire string is an attribute
+    if (src[a] != '(') {
+      attr = src.substr(a, (src_len-a));
+      return src_len;
+    }
+    
+    // skip open paren
+    while (a < src_len && src[a] == '(')
+      ++a;
+
+    // make sure there's a string to parse
+    if (a >= src_len)
+      return 0;
+
+    // find next delimiter, "=" or close paren
+    b = src.find_first_of("=)");
+    if (b == std::string::npos)
+      return 0;
+
+    // extract the attribute name and if there's
+    // no "=" after it, return it with empty value
+    attr = src.substr(a, b-a);
+    if (src[b] == ')') {
+      value = "";
+      return b+1;
+    }
+
+    // otherwise, look for end of attribute value
+    c = src.find(')', b);
+    if (c == std::string::npos)
+      return 0;
+
+    // and return it
+    value = src.substr(b+1, c-(b+1));
+
+    // if value surrounded by double-quotes, remove them
+    if (value[0] == '"' && value[value.size()-1] == '"')
+        value = value.substr(1, value.size()-2);
+    
+    // return the number of characters we processed
+    return c+1;
+  }
+
+  static void parse_attr_list(const std::string& attrlist, Local<Object>& obj) {
+    std::string attr, value;
+    int cursor = 0, advance = 0;
+
+    do {
+      advance = extract_one_attr(attrlist.substr(cursor), attr, value);
+      if (advance <= 0)
+        break;
+
+      // Add attr-value pair to object
+      obj->Set(obj->CreationContext(), Nan::New<String>(attr.c_str()).ToLocalChecked(), Nan::New<String>(value.c_str()).ToLocalChecked());
+
+      cursor += advance;
+    } while (advance > 0);
+
+    return;
+  }
+
   static void afterWork(uv_work_t* work_req, int status) {
     Nan::HandleScope scope;
     FindAttrsBaton* baton = static_cast<FindAttrsBaton*>(work_req->data);
@@ -42,13 +116,20 @@ struct FindAttrsBaton : Baton {
       Local<Value> argv[1] = { Exception::Error(Nan::New<String>(slp_error_message(baton->slp_error)).ToLocalChecked()) };
       baton->callback->Call(1, argv);
     } else {
-      Local<Array> arr = Nan::New<Array>();
+      Local<Array> ary = Nan::New<Array>();
+      std::set<std::string> unique_responses;
       for (unsigned int i = 0; i < baton->result.size(); i++) {
-          Local<String> obj = Nan::New<String>(baton->result[i].c_str()).ToLocalChecked();
-          arr->Set(i, obj);
+        unique_responses.emplace(baton->result[i].c_str());
       }
-      Local<Value> argv[2] = { Nan::Null(), arr };
 
+      unsigned int i = 0;
+      for (auto it=unique_responses.begin(); it!=unique_responses.end(); ++it) {
+        Local<Object> obj = Nan::New<Object>();
+        parse_attr_list(*it, obj);
+        ary->Set(obj->CreationContext(), i++, obj);
+      }
+
+      Local<Value> argv[2] = { Nan::Null(), ary };
       baton->callback->Call(2, argv);
     }
     delete baton->callback;

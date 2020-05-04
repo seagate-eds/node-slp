@@ -80,7 +80,7 @@
 		  ],
         }],
 
-        ['OS=="linux"', { 'defines': [ 'ETCDIR="/etc"', 'DEBUG=1', 'LINUX=1'] }],
+        ['OS=="linux"', { 'defines': [ 'ETCDIR="/etc"', 'DEBUG=0', 'LINUX=1'] }],
 
       ],
       'libraries': [
