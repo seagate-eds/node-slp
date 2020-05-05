@@ -36,7 +36,24 @@ struct FindAttrsBaton : Baton {
     }
   }
 
-  // parse an attribute
+  // remove SLP-specific escape codes from the source string
+  static std::string unescape(const std::string& src) {
+    char hex[3];
+    std::string result;
+    for (auto p = src.begin(); p < src.end(); p++) {
+      if (*p == '\\' && (src.end() - p) >= 3) {
+        hex[0] = *++p;
+        hex[1] = *++p;
+        hex[2] = 0;
+        result.push_back((char)strtoul(hex, NULL, 16));
+      }
+      else
+        result.push_back(*p);
+    }
+    return result;
+  }
+
+  // parse an SLP attribute string into a key value pair
   static int extract_one_attr(const std::string& src, std::string& attr, std::string& value) {
     std::string::size_type a = 0, b = 0, c = 0, src_len = src.size();
 
@@ -53,7 +70,7 @@ struct FindAttrsBaton : Baton {
       attr = src.substr(a, (src_len-a));
       return src_len;
     }
-    
+
     // skip open paren
     while (a < src_len && src[a] == '(')
       ++a;
@@ -86,7 +103,10 @@ struct FindAttrsBaton : Baton {
     // if value surrounded by double-quotes, remove them
     if (value[0] == '"' && value[value.size()-1] == '"')
         value = value.substr(1, value.size()-2);
-    
+
+    if (value.find('\\') != std::string::npos)
+      value = unescape(value);
+
     // return the number of characters we processed
     return c+1;
   }
