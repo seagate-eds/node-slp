@@ -14,6 +14,6 @@
   "license": "MIT",
   "readmeFilename": "README.md",
   "dependencies": {
-    "nan": "^2.14.0"
+    "nan": "^2.14.1"
   }
 }
