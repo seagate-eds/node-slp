@@ -4,6 +4,10 @@
   "description": "OpenSLP bindings",
   "main": "index.js",
   "scripts": {
+    "install": "node npm-install-helper.js",
+    "install:linux": "source npm-install-helper.sh",
+    "install:win32": "source npm-install-helper.bat",
+    "install:darwin": "source npm-install-helper.sh",
     "test": "./node_modules/.bin/tap --stderr test/*.js"
   },
   "devDependencies": {
