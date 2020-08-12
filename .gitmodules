@@ -1,4 +1,4 @@
 [submodule "src/openslp"]
 	path = src/openslp
 	url = https://github.com/seagate-eds/openslp.git
-	branch = eds
+	#branch = eds
