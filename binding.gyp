@@ -75,14 +75,14 @@
         ['OS=="mac"', {
           'defines': [
             'DARWIN'
-            'HAVE_CONFIG_H',
+            'HAVE_CONFIG_H=1',
             'ETCDIR="/etc"',
           ],
         }],
         ['OS=="linux"', {
           'defines': [
             'LINUX=1',
-            'HAVE_CONFIG_H'
+            'HAVE_CONFIG_H=1',
             'ETCDIR="/etc"',
           ] }],
       ],
