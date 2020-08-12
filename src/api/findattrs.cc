@@ -6,13 +6,13 @@ using namespace v8;
 
 struct FindAttrsBaton : Baton {
   // arguments
-  String::Utf8Value urlOrServiceType;
-  String::Utf8Value scopeList;
-  String::Utf8Value attrIds;
+  Nan::Utf8String urlOrServiceType;
+  Nan::Utf8String scopeList;
+  Nan::Utf8String attrIds;
   // result
   std::vector< std::string > result;
 
-  FindAttrsBaton(const Nan::FunctionCallbackInfo<v8::Value>& info) : Baton(), urlOrServiceType(info[0]), scopeList(info[1]), attrIds(info[2]) {
+    FindAttrsBaton(const Nan::FunctionCallbackInfo<v8::Value>& info) : Baton(), urlOrServiceType(info[0]), scopeList(info[1]), attrIds(info[2]) {
     callback = new Nan::Callback(Nan::To<Function>(info[3]).ToLocalChecked());
   }
 
