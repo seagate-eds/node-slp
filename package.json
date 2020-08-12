@@ -6,7 +6,7 @@
     "scripts": {
         "install": "node npm-install-helper.js",
         "install:linux": "source npm-install-helper.sh",
-        "install:win32": "npm-install-helper.bat",
+        "install:win32": ".\\npm-install-helper.bat",
         "install:darwin": "source npm-install-helper.bat",
         "test": "./node_modules/.bin/tap --stderr test/*.js"
     },
