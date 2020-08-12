@@ -1,23 +1,23 @@
 {
-  "name": "slp",
-  "version": "1.0.0",
-  "description": "OpenSLP bindings",
-  "main": "index.js",
-  "scripts": {
-    "install": "node npm-install-helper.js",
-    "install:linux": "source npm-install-helper.sh",
-    "install:win32": "source npm-install-helper.bat",
-    "install:darwin": "source npm-install-helper.sh",
-    "test": "./node_modules/.bin/tap --stderr test/*.js"
-  },
-  "devDependencies": {
-    "tap": "0.4.x"
-  },
-  "repository": "https://github.com/tralamazza/node-slp",
-  "author": "Daniel Tralamazza",
-  "license": "MIT",
-  "readmeFilename": "README.md",
-  "dependencies": {
-    "nan": "^2.14.1"
-  }
+    "name": "slp",
+    "version": "1.0.0",
+    "description": "OpenSLP bindings",
+    "main": "index.js",
+    "scripts": {
+        "install": "node npm-install-helper.js",
+        "install:linux": "source npm-install-helper.sh",
+        "install:win32": "npm-install-helper.bat",
+        "install:darwin": "source npm-install-helper.bat",
+        "test": "./node_modules/.bin/tap --stderr test/*.js"
+    },
+    "devDependencies": {
+        "tap": "0.4.x"
+    },
+    "repository": "https://github.com/tralamazza/node-slp",
+    "author": "Daniel Tralamazza",
+    "license": "MIT",
+    "readmeFilename": "README.md",
+    "dependencies": {
+        "nan": "^2.14.1"
+    }
 }

@@ -3,19 +3,17 @@
     {
       'target_name': 'slp',
       'defines': [
-            'HAVE_CONFIG_H',
-            'ENABLE_ASYNC_API',
+        'ENABLE_ASYNC_API',
       ],
       'include_dirs' : [
-          "<!(node -e \"require('nan')\")",
-#cm	  "src",
-          "src/openslp/openslp", #cm
-          "src/openslp/openslp/common",
-          "src/openslp/openslp/libslp"
+        "<!(node -e \"require('nan')\")",
+        "src/openslp/openslp",
+        "src/openslp/openslp/common",
+        "src/openslp/openslp/libslp"
       ],
       'sources': [
         'src/openslp/openslp/common/slp_spi.c',
-#        'src/openslp/openslp/common/slp_predicate.c',
+#       'src/openslp/openslp/common/slp_predicate.c',
         'src/openslp/openslp/common/slp_network.c',
         'src/openslp/openslp/common/slp_compare.c',
         'src/openslp/openslp/common/slp_dhcp.c',
@@ -54,34 +52,39 @@
         'src/node_slp.cc',
         'src/api/baton.cc',
         'src/api/findsrvs.cc',
-#        'src/api/findsrvtypes.cc',
+#       'src/api/findsrvtypes.cc',
         'src/api/findattrs.cc',
-#        'src/api/reg.cc',
-#        'src/api/dereg.cc',
-#        'src/api/delattrs.cc'
+#       'src/api/reg.cc',
+#       'src/api/dereg.cc',
+#       'src/api/delattrs.cc'
       ],
       'conditions': [
         ['OS=="win"', {
-		  'sources': [
-			'src/openslp/openslp/common/slp_win32.c',
-		  ],
- 		  'defines': [
-				'LIBSLP_STATIC',
-            	'SLP_VERSION="2.0.0"'
-		  ],
- 	          'libraries': [
-				'-lws2_32'
- 	          ]
-       }],
-        ['OS=="mac"', {
-		  'defines': [
-				'ETCDIR="/etc"',
-				'DARWIN'
-		  ],
+          'sources': [
+            'src/openslp/openslp/common/slp_win32.c',
+          ],
+          'defines': [
+            'LIBSLP_STATIC',
+            'SLP_VERSION="2.0.0"',
+            'NODE14=14'
+          ],
+          'libraries': [
+            '-lws2_32'
+          ]
         }],
-
-        ['OS=="linux"', { 'defines': [ 'ETCDIR="/etc"', 'LINUX=1'] }],
-
+        ['OS=="mac"', {
+          'defines': [
+            'DARWIN'
+            'HAVE_CONFIG_H',
+            'ETCDIR="/etc"',
+          ],
+        }],
+        ['OS=="linux"', {
+          'defines': [
+            'LINUX=1',
+            'HAVE_CONFIG_H'
+            'ETCDIR="/etc"',
+          ] }],
       ],
       'libraries': [
       ]
